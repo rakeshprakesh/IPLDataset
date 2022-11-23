@@ -1,0 +1,62 @@
+USE IPL
+GO
+
+CREATE TABLE BALLS_BY_BALLS (
+	match_id INT,
+	over_id INT,
+	ball_id INT,
+	innings_no INT, 
+	team_batting INT,
+	team_bowling INT,
+	striker_batting_position INT, 
+	extra_type VARCHAR(50),
+	runs_scored INT,
+	extra_runs INT,
+	wides INT,
+	legbyes INT, 
+	byes INT,
+	noballs INT,
+	penalty INT,
+	bowler_extras INT,
+	out_type VARCHAR(50),
+	caught VARCHAR(50),
+	bowled VARCHAR(50),
+	run_out VARCHAR(50),
+	lbw VARCHAR(50),
+	retired_hurt VARCHAR(50),
+	stumped VARCHAR(50),
+	caught_and_bowled VARCHAR(50),
+	hit_wicket VARCHAR(50),
+	obstructingfeild VARCHAR(50),
+	bowler_wicket VARCHAR(50),
+	match_date date,
+	season INT,
+	striker INT,
+	non_striker INT,
+	bowler INT,
+	player_out VARCHAR(50),
+	fielders VARCHAR(50),
+	striker_match_sk INT,
+	strikersk INT, 
+	nonstriker_match_sk INT,
+	nonstriker_sk INT,
+	fielder_match_sk INT,
+	fielder_sk INT,
+	bowler_match_sk INT, 
+	bowler_sk INT,
+	playerout_match_sk INT,
+	battingteam_sk INT,
+	bowlingteam_sk INT,
+	keeper_catch VARCHAR(50),
+	player_out_sk INT,
+	matchdatesk date
+);
+
+BULK INSERT BALLS_BY_BALLS FROM '\\localhost\C$\IPLDataset\Ball_By_Ball.CSV'
+WITH (
+		FIRSTROW = 2
+	,	FIELDTERMINATOR = ','
+	,	ROWTERMINATOR = '0x0a'
+);
+
+
