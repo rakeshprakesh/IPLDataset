@@ -1,6 +1,7 @@
 USE IPL
 GO
 
+--- TABLE CREATION
 CREATE TABLE BALLS_BY_BALLS (
 	match_id INT,
 	over_id INT,
@@ -51,8 +52,90 @@ CREATE TABLE BALLS_BY_BALLS (
 	player_out_sk INT,
 	matchdatesk date
 );
-
+CREATE TABLE MATCHES (
+	match_sk INT,
+	match_id INT,
+	team1 VARCHAR(100),
+	team2 VARCHAR(100),
+	match_date date,
+	season_year INT,
+	venue_name VARCHAR(100),
+---	location_name VARCHAR(100),
+	city_name VARCHAR(100),
+	country_name VARCHAR(100),
+	toss_winner VARCHAR(100),
+	match_winner VARCHAR(100),
+	toss_name VARCHAR(100),
+	win_type VARCHAR(100),
+	outcome_type VARCHAR(100),
+	manofmach VARCHAR(100),
+	win_margin INT NULL,
+	country_id INT NULL,
+);
+CREATE TABLE PLAYER_MATCH (
+	player_match_sk INT,
+	playermatch_key BIGINT,
+	match_id INT,
+	player_id INT,
+	player_name VARCHAR(100),
+	dob DATE,
+	batting_hand VARCHAR(100),
+	bowling_skill VARCHAR(100),
+	country_name VARCHAR(100),
+	role_desc VARCHAR(100),
+	player_team VARCHAR(100),
+	opposit_team VARCHAR(100),
+	season_year INT,
+	is_manofthematch VARCHAR(100),
+	age_as_on_match INT,
+	isplayers_team_won VARCHAR(100), 
+	batting_status VARCHAR(100) NULL,
+	bowling_status VARCHAR(100) NULL,
+	player_captain VARCHAR(100) NULL,
+	opposit_captain VARCHAR(100),
+	player_keeper VARCHAR(100),
+	opposit_keeper VARCHAR(100)
+);
+CREATE TABLE PLAYER (
+	player_sk INT,
+	player_id INT,
+	player_name VARCHAR(100),
+	dob DATE,
+	batting_hand VARCHAR(100),
+ 	bowling_skill VARCHAR(100) NULL,
+	country_name VARCHAR(100)
+);
+CREATE TABLE TEAM (
+	team_sk INT,
+	team_id INT,
+	team_name VARCHAR(100)
+);
+--- BULK INSERT
 BULK INSERT BALLS_BY_BALLS FROM '\\localhost\C$\IPLDataset\Ball_By_Ball.CSV'
+WITH (
+		FIRSTROW = 2
+	,	FIELDTERMINATOR = ','
+	,	ROWTERMINATOR = '0x0a'
+);
+BULK INSERT MATCHES FROM '\\localhost\C$\IPLDataset\Match.CSV'
+WITH (
+		FIRSTROW = 2
+	,	FIELDTERMINATOR = ','
+	,	ROWTERMINATOR = '0x0a'
+);
+BULK INSERT PLAYER_MATCH FROM '\\localhost\C$\IPLDataset\Player_match.CSV'
+WITH (
+		FIRSTROW = 2
+	,	FIELDTERMINATOR = ','
+	,	ROWTERMINATOR = '0x0a'
+);
+BULK INSERT PLAYER FROM '\\localhost\C$\IPLDataset\Player.CSV'
+WITH (
+		FIRSTROW = 2
+	,	FIELDTERMINATOR = ','
+	,	ROWTERMINATOR = '0x0a'
+);
+BULK INSERT TEAM FROM '\\localhost\C$\IPLDataset\Team.CSV'
 WITH (
 		FIRSTROW = 2
 	,	FIELDTERMINATOR = ','
@@ -60,3 +143,29 @@ WITH (
 );
 
 
+SELECT * FROM BALLS_BY_BALLS
+SELECT * FROM MATCHES
+SELECT * FROM PLAYER_MATCH
+SELECT * FROM PLAYER
+SELECT * FROM TEAM
+
+SELECT P.dob, CONVERT (DATE, GETDATE()) AS NEWCOL, DATEDIFF(YEAR, P.dob, CONVERT (DATE, GETDATE())) AS AGEDIFF from PLAYER P
+SELECT P.dob, CONVERT (DATE, GETDATE()) AS NEWCOL, DATEDIFF(YEAR, P.dob, CONVERT (DATE, CURRENT_TIMESTAMP)) AS AGEDIFF from PLAYER P
+
+SELECT match_id, innings_no, SUM((runs_scored+extra_runs)) totalruns FROM BALLS_BY_BALLS
+GROUP BY match_id, innings_no ORDER BY match_id, innings_no ASC
+
+SELECT b.match_id FROM BALLS_BY_BALLS B WHERE runs_scored = '4'
+
+--- INDEX CREATION
+CREATE INDEX IX_MATCHID ON BALLS_BY_BALLS(match_id)
+CREATE INDEX IX_RUNSSCORED ON BALLS_BY_BALLS(runs_scored) INCLUDE (match_id)
+DROP INDEX IX_MATCHID ON BALLS_BY_BALLS
+DROP INDEX IX_RUNSSCORED ON BALLS_BY_BALLS
+
+SELECT B.match_id, SUM((B.runs_scored+B.extra_runs)) totalruns, b.innings_no, m.team1, m.team2, m.match_winner, b.team_batting, b.team_bowling from BALLS_BY_BALLS B
+LEFT JOIN MATCHES M ON m.match_id = b.match_id GROUP BY B.match_id, m.team1, m.team2, m.match_winner, b.innings_no, b.team_batting, b.team_bowling ORDER BY b.match_id
+
+SELECT B.match_id, SUM((B.runs_scored+B.extra_runs)) totalruns, b.innings_no, m.team1, m.team2, m.match_winner, T.team_name Batting_First from BALLS_BY_BALLS B
+LEFT JOIN MATCHES M ON m.match_id = b.match_id LEFT JOIN TEAM T ON B.team_batting = T.team_id
+GROUP BY B.match_id, m.team1, m.team2, m.match_winner, b.innings_no, T.team_name ORDER BY b.match_id
